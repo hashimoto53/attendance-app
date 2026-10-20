@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role', // ← 管理者・一般ユーザー判別用に追加
     ];
 
     /**
@@ -42,4 +43,20 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * ユーザーは複数の勤怠記録を持つ
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * ユーザーは複数の修正申請を持つ
+     */
+    public function correctionRequests()
+    {
+        return $this->hasMany(CorrectionRequest::class);
+    }
 }
