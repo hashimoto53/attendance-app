@@ -1,0 +1,69 @@
+<?php
+
+namespace App\Providers;
+
+use App\Actions\Fortify\CreateNewUser;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
+use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Contracts\LoginResponse; // ← 追加
+
+class FortifyServiceProvider extends ServiceProvider
+{
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        //
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        Fortify::createUsersUsing(CreateNewUser::class);
+
+        // 会員登録画面の指定
+        Fortify::registerView(function () {
+            return view('auth.register');
+        });
+
+        // ログイン画面の指定
+        Fortify::loginView(function () {
+            return view('auth.login');
+        });
+
+        // メール認証画面の指定（必要な場合）
+        Fortify::verifyEmailView(function () {
+            return view('auth.verify-email');
+        });
+
+        // ログイン試行制限（レートリミット）
+        RateLimiter::for('login', function (Request $request) {
+            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+
+            return Limit::perMinute(5)->by($throttleKey);
+        });
+
+        // ログイン後のリダイレクト先振り分け（追加箇所）
+        $this->app->instance(LoginResponse::class, new class implements LoginResponse {
+            public function toResponse($request)
+            {
+                $user = auth()->user();
+
+                // 管理者（role = 2）の場合は管理者画面へ
+                if ($user->role === 2) {
+                    return redirect('/admin/attendance/list');
+                }
+
+                // 一般ユーザー（role = 1）は勤怠打刻画面へ
+                return redirect('/attendance');
+            }
+        });
+    }
+}
