@@ -35,7 +35,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         // ログイン画面の指定
         Fortify::loginView(function () {
-            return view('auth.login');
+            return view('user.user-login');
         });
 
         // メール認証画面の指定（必要な場合）

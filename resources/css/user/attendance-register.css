@@ -115,3 +115,22 @@
     padding-top: 30px;
     text-align: center;
 }
+
+.attendance__button {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.attendance__button button {
+    cursor: pointer;
+    margin: 0;
+}
+
+.attendance__button button:disabled {
+    background: #C8C8C8;
+    color: #888888;
+    cursor: not-allowed;
+}
