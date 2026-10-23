@@ -83,6 +83,16 @@
 .form__input--date {
     border: none;
     outline: none;
+    text-align: left;
+    width: auto;
+}
+
+.form__input--name {
+    min-width: 180px;
+}
+
+.form__input--date {
+    min-width: 96px;
 }
 
 /* ボタン */

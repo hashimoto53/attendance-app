@@ -57,6 +57,6 @@ class User extends Authenticatable
      */
     public function correctionRequests()
     {
-        return $this->hasMany(CorrectionRequest::class);
+        return $this->hasMany(CorrectionRequest::class, 'user_id', 'id');
     }
 }

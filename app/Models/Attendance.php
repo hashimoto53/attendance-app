@@ -73,6 +73,6 @@ class Attendance extends Model
      */
     public function correctionRequests()
     {
-        return $this->hasMany(CorrectionRequest::class);
+        return $this->hasMany(CorrectionRequest::class, 'attendance_id', 'id');
     }
 }

@@ -55,7 +55,7 @@
             </td>
             <td class="table__description">
                 @if (!empty($attendanceRecord['id']))
-                <a class="table__item--detail-link" href="{{ url('/attendance/' . $attendanceRecord['id']) }}">詳細</a>
+                <a class="table__item--detail-link" href="{{ route('attendance.detail', $attendanceRecord['id']) }}">詳細</a>
                 @endif
             </td>
         </tr>
