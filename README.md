@@ -1,3 +1,45 @@
+# 勤怠管理アプリ
+
+Laravel 10 と Laravel Sail（Docker）で動く勤怠管理アプリです。
+
+## ログイン情報
+
+シーダー実行後、次のアカウントでログインできます。パスワードはいずれも `password` です。
+
+| 区分 | メールアドレス | パスワード |
+| --- | --- | --- |
+| 管理者 | user3@example.com | password |
+| 一般ユーザー | user1@example.com | password |
+| 一般ユーザー | user2@example.com | password |
+
+- 管理者（user3）でログインすると、勤怠一覧（`/admin/attendance/list`）に遷移します。
+- 一般ユーザー（user1 / user2）でログインすると、勤怠打刻画面（`/attendance`）に遷移します。
+
+## 環境構築手順
+
+Docker が起動している状態で、プロジェクト直下で実行します。
+
+```bash
+docker run --rm \
+  -u "$(id -u):$(id -g)" \
+  -v "$(pwd):/var/www/html" \
+  -w /var/www/html \
+  laravelsail/php82-composer:latest \
+  composer install
+
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail artisan migrate --seed
+./vendor/bin/sail npm install
+./vendor/bin/sail npm run dev
+```
+
+## アクセス
+
+- アプリ: http://localhost
+- phpMyAdmin: http://localhost:8080
+- Mailpit: http://localhost:8025
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

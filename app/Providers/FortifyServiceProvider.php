@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
+use App\Http\Requests\LoginRequest;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -18,7 +19,10 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            \Laravel\Fortify\Http\Requests\LoginRequest::class,
+            LoginRequest::class
+        );
     }
 
     /**
@@ -30,7 +34,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         // 会員登録画面の指定
         Fortify::registerView(function () {
-            return view('auth.register');
+            return view('user.register');
         });
 
         // ログイン画面の指定
