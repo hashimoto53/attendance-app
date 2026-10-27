@@ -921,31 +921,32 @@ whenLoaded('breaks') / whenLoaded('applications') により、関連データは
 
 # 基本設計書
 									
+									
 	基本設計書								
 		"こちらは受講生の皆さんが入力するシートになります。
 こちらの設計書は評価対象になりますので、提出時にアプリケーションと仕様が一致するか必ず確認してください。"							
 	Route,Controller								
 		画面名称	パス	メソッド	ルート先コントローラー	アクション	認証必須	説明	
-		会員登録画面（一般ユーザー）	/register						
-		ログイン画面（一般ユーザー）	/login						
-		出勤登録画面（一般ユーザー）	/attendance						
-		勤怠一覧画面（一般ユーザー）	/attendance/list						
-		勤怠詳細画面（一般ユーザー）	/attendance/detail/{id}						
-		申請一覧画面（一般ユーザー）	/stamp_correction_request/list						
-		ログイン画面（管理者）	/admin/login						
-		勤怠一覧画面（管理者）	/admin/attendance/list						
-		勤怠詳細画面（管理者）	admin/attendance/{id}						
-		スタッフ一覧画面（管理者）	/admin/staff/list						
-		スタッフ別勤怠一覧画面（管理者）	/admin/attendance/staff/{id}						
-		申請一覧画面（管理者）	/stamp_correction_request/list						
-		修正申請承認画面（管理者）	/stamp_correction_request/approve/{attendance_correct_request_id}						
-									
+		会員登録画面（一般ユーザー）	/register	GET / POST	RegisteredUserController（Fortify）	create / store	不要（guest）	会員登録画面の表示およびユーザー登録処理	
+		ログイン画面（一般ユーザー）	/login	GET / POST	AuthenticatedSessionController（Fortify）	create / store	不要（guest）	ログイン画面の表示およびログイン認証処理	
+		出勤登録画面（一般ユーザー）	GET /attendance<br>POST /attendance/clock-in<br>POST /attendance/clock-out<br>POST /attendance/rest-start<br>POST /attendance/rest-end	GET / POST	AttendanceController	index / clockIn / clockOut / restStart / restEnd	必須（auth）	勤怠打刻画面の表示および各種打刻処理	
+		勤怠一覧画面（一般ユーザー）	/attendance/list	GET	AttendanceController	list	必須（auth）	ログインユーザーの月次勤怠一覧表示	
+		勤怠詳細画面（一般ユーザー）	/attendance/detail/{id}	GET / POST	AttendanceController	detail / requestCorrection	必須（auth）	自分の勤怠詳細表示および修正申請処理	
+		申請一覧画面（一般ユーザー）	/stamp_correction_request/list	GET	CorrectionRequestController	list	必須（auth）	自分の修正申請一覧（承認待ち・承認済み）表示	
+		ログイン画面（管理者）	/login	GET / POST	AuthenticatedSessionController（Fortify）	create / store	不要（guest）	ログイン画面の表示および管理者ログイン認証処理（ログイン後、role=2であれば管理者画面へ遷移）	
+		勤怠一覧画面（管理者）	/admin/attendance/list	GET	AdminAttendanceController	list	必須（auth, admin）	全ユーザーの日次勤怠一覧表示	
+		勤怠詳細画面（管理者）	/admin/attendance/{id}	GET / POST	AdminAttendanceController	detail / update	必須（auth, admin）	管理者による勤怠詳細表示および勤怠修正処理（ルート定義のみ/コントローラー未接続）	
+		スタッフ一覧画面（管理者）	/admin/staff/list	GET	AdminAttendanceController	staffList	必須（auth, admin）	全一般ユーザーの一覧表示（ルート定義のみ/コントローラー未接続）	
+		スタッフ別勤怠一覧画面（管理者）	/admin/attendance/staff/{id}	GET	AdminAttendanceController	staffAttendance	必須（auth, admin）	指定したスタッフの月次勤怠一覧表示（ルート定義のみ/コントローラー未接続）	
+		申請一覧画面（管理者）	/stamp_correction_request/list	GET	CorrectionRequestController	list	必須（auth）	全ユーザーの修正申請一覧（承認待ち・承認済み）表示	
+		修正申請承認画面（管理者）	/stamp_correction_request/approve/{attendance_correct_request_id}	GET / POST	CorrectionRequestController	showApproveForm / approve	必須（auth, admin）	修正申請の詳細表示および管理者による承認処理	
+		※会員登録とログインは routes/web.php ではなく Fortify が登録。コントローラーの名前空間は Laravel\Fortify\Http\Controllers です。							
 	Model								
 		モデルファイル名	説明						
-									
-									
-									
-									
+		User.php	ログインユーザー。role=1 が一般ユーザー、role=2 が管理者						
+		Attendance.php	1ユーザー・1日の勤怠。status は 0勤務外、1出勤中、2休憩中、3退勤済						
+		Rest.php	1勤怠に対する休憩。開始・終了時刻を持つ						
+		CorrectionRequest.php	勤怠の修正申請。status は 0承認待ち、1承認済み						
 									
 									
 									
@@ -955,44 +956,38 @@ whenLoaded('breaks') / whenLoaded('applications') により、関連データは
 									
 	View								
 		画面名称	bladeファイル名						
-		会員登録画面（一般ユーザー）							
-		ログイン画面（一般ユーザー）							
-		出勤登録画面（一般ユーザー）							
-		勤怠一覧画面（一般ユーザー）							
-		勤怠詳細画面（一般ユーザー）							
-		申請一覧画面（一般ユーザー）							
-		ログイン画面（管理者）							
-		勤怠一覧画面（管理者）							
-		勤怠詳細画面（管理者）							
-		スタッフ一覧画面（管理者）							
-		スタッフ別勤怠一覧画面（管理者）							
-		申請一覧画面（管理者）							
-		修正申請承認画面（管理者）							
-									
+		会員登録画面（一般ユーザー）	user/register.blade.php						
+		ログイン画面（一般ユーザー）	user/user-login.blade.php						
+		出勤登録画面（一般ユーザー）	attendance/index.blade.php						
+		勤怠一覧画面（一般ユーザー）	user/user-attendance-list.blade.php						
+		勤怠詳細画面（一般ユーザー）	user/user-detail.blade.php						
+		申請一覧画面（一般ユーザー）	user/user-application-list.blade.php						
+		ログイン画面（管理者）	admin/admin-login.blade.php（ファイルのみ。画面としては未使用）						
+		勤怠一覧画面（管理者）	admin/admin-attendance-list.blade.php						
+		勤怠詳細画面（管理者）	admin/admin-detail.blade.php（ファイルのみ。コントローラ未接続）						
+		スタッフ一覧画面（管理者）	admin/staff-list.blade.php（ファイルのみ。コントローラ未接続）						
+		スタッフ別勤怠一覧画面（管理者）	admin/staff-attendance-list.blade.php（ファイルのみ。コントローラ未接続）						
+		申請一覧画面（管理者）	admin/admin-application-list.blade.php						
+		修正申請承認画面（管理者）	admin/admin-application-detail.blade.php						
+		※共通レイアウトは layouts/app.blade.php（一般）と layouts/admin-app.blade.php（管理者）。user/attendance-register.blade.php と welcome.blade.php は現在のルートから表示していません。							
 	バリデーション								
 		バリデーションファイル名	フォーム	ルール					
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
-									
+		LoginRequest.php	email	required | string	ログイン時の入力チェック（Fortify標準）				
+		LoginRequest.php	password	required | string	ログイン時の入力チェック（Fortify標準）				
+		CreateNewUser.php	name	required | string | max:255	会員登録時の入力チェック（Fortify標準）				
+		CreateNewUser.php	email	required | string | email | max:255 | unique:users	会員登録時の入力チェック（Fortify標準）				
+		CreateNewUser.php	password	required | string | min:8 | confirmed	会員登録時の入力チェック（Fortify標準）				
+		AttendanceCorrectionRequest.php	new_clock_in	required | string	修正申請時の出勤時刻				
+		AttendanceCorrectionRequest.php	new_clock_out	required | string	修正申請時の退勤時刻				
+		AttendanceCorrectionRequest.php	new_break_in	nullable | array	修正申請時の休憩開始時刻（配列）				
+		AttendanceCorrectionRequest.php	new_break_out	nullable | array	修正申請時の休憩終了時刻（配列）				
+		AttendanceCorrectionRequest.php	new_break_in.*	nullable | string	各休憩開始時刻				
+		AttendanceCorrectionRequest.php	new_break_out.*	nullable | string	各休憩終了時刻				
+		AttendanceCorrectionRequest.php	comment	required | string | max:255	申請理由（※出退勤・休憩時刻の前後判定は withValidator メソッドにて処理）				
+								
 
 # テーブル仕様書
+											
 											
 	テーブル仕様書										
 		"こちらは受講生の皆さんが入力するシートになります。
@@ -1006,13 +1001,41 @@ whenLoaded('breaks') / whenLoaded('applications') により、関連データは
 				score	integer			○			
 				created_at	timestamp						
 				updated_at	timestamp						
-		1	〇〇テーブル								
+		1	usersテーブル								
+				id	unsigned bigint	○		○			
+				name	varchar(255)			○			
+				email	varchar(255)		○	○			
+				email_verified_at	timestamp						
+				password	varchar(255)			○			
+				two_factor_secret	text						
+				two_factor_recovery_codes	text						
+				two_factor_confirmed_at	timestamp						
+				role	tinyint			○			
+				remember_token	varchar(100)						
+				created_at	timestamp						
+				updated_at	timestamp						
 											
+		2	attendancesテーブル								
+				id	unsigned bigint	○		○			
+				user_id	unsigned bigint			○	users(id)		
+				date	date			○			
+				clock_in	time						
+				clock_out	time						
+				status	tinyint			○			
+				remarks	varchar(255)						
+				created_at	timestamp						
+				updated_at	timestamp						
 											
-										こちらには作成したER図の画像を貼り付けてください。	
 											
 											
 											
+		3	restsテーブル								
+				id	unsigned bigint	○		○			
+				attendance_id	unsigned bigint			○	attendances(id)		
+				start_time	time						
+				end_time	time						
+				created_at	timestamp						
+				updated_at	timestamp						
 											
 											
 											
@@ -1020,10 +1043,24 @@ whenLoaded('breaks') / whenLoaded('applications') により、関連データは
 											
 											
 											
-		2	〇〇テーブル								
+		4	correction_requestsテーブル								
+				id	unsigned bigint	○		○			
+				user_id	unsigned bigint			○	users(id)		
+				attendance_id	unsigned bigint			○	attendances(id)		
+				date	date			○			
+				clock_in	time			○			
+				clock_out	time			○			
+				remarks	varchar(255)			○			
+				status	tinyint			○			
+				created_at	timestamp						
+				updated_at	timestamp						
 											
 											
 											
+		5	password_reset_tokensテーブル								
+				email	varchar(255)	○		○			
+				token	varchar(255)			○			
+				created_at	timestamp						
 											
 											
 											
@@ -1034,73 +1071,31 @@ whenLoaded('breaks') / whenLoaded('applications') により、関連データは
 											
 											
 											
-		3	〇〇テーブル								
+		6	failed_jobsテーブル								
+				id	unsigned bigint	○		○			
+				uuid	varchar(255)		○	○			
+				connection	text			○			
+				queue	text			○			
+				payload	longtext			○			
+				exception	longtext			○			
+				failed_at	timestamp			○			
 											
 											
 											
 											
 											
 											
-											
-											
-											
-											
-											
-											
-											
-		4	〇〇テーブル								
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
-		5	〇〇テーブル								
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
-		6	〇〇テーブル								
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
-		7	〇〇テーブル								
-											
-											
-											
-											
-											
-											
-											
-											
-											
-											
+		7	personal_access_tokensテーブル								
+				id	unsigned bigint	○		○			
+				tokenable_type	varchar(255)			○			
+				tokenable_id	unsigned bigint			○			
+				name	varchar(255)			○			
+				token	varchar(64)		○	○			
+				abilities	text						
+				last_used_at	timestamp						
+				expires_at	timestamp						
+				created_at	timestamp						
+				updated_at	timestamp						
 											
 											
 											
@@ -1132,4 +1127,4 @@ whenLoaded('breaks') / whenLoaded('applications') により、関連データは
 											
 											
 											
-											
+												

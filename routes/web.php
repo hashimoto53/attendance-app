@@ -37,16 +37,22 @@ Route::middleware(['auth'])->group(function () {
 
     // PG06 / PG12: 申請一覧画面（一般・管理者共通パス）
     Route::get('/stamp_correction_request/list', [CorrectionRequestController::class, 'list'])->name('request.list');
+});
 
-    // PG13: 修正申請承認画面・承認処理（管理者用）
+// ==========================================
+// 管理者専用ルート（認証必須かつ role = 2）
+// ==========================================
+Route::middleware(['auth', 'admin'])->group(function () {
+
+    // PG13: 修正申請承認画面・承認処理
     Route::get('/stamp_correction_request/approve/{attendance_correct_request_id}', [CorrectionRequestController::class, 'showApproveForm'])->name('request.approve.form');
     Route::post('/stamp_correction_request/approve/{attendance_correct_request_id}', [CorrectionRequestController::class, 'approve'])->name('request.approve');
 });
 
 // ==========================================
-// 管理者用ルート（認証必須）
+// 管理者用ルート（認証必須かつ role = 2）
 // ==========================================
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
     // PG08: 勤怠一覧画面（管理者）
     Route::get('/attendance/list', [AdminAttendanceController::class, 'list'])->name('admin.attendance.list');
