@@ -9,7 +9,7 @@
         <div class="detail__header">
             <h1 class="content__header--item">勤怠詳細</h1>
         </div>
-        <form class="form" action="{{ url('/attendance/' . $attendanceRecord['id']) }}" method="post">
+        <form class="form" action="{{ route('admin.attendance.update', $attendanceRecord['id']) }}" method="post">
             @csrf
                 <div class="form__content">
                     <div class="form__group">
@@ -32,10 +32,10 @@
                         <label class="form__header" for="new_clock_in">出勤・退勤</label>
                         <div class="form__input-group">
                             <input class="form__input" id="new_clock_in" type="text" name="new_clock_in"
-                                value="{{ $attendanceRecord['clock_in'] }}">
+                                value="{{ old('new_clock_in', $attendanceRecord['clock_in']) }}">
                             <p>〜</p>
                             <input class="form__input" type="text" name="new_clock_out"
-                                value="{{ $attendanceRecord['clock_out'] }}">
+                                value="{{ old('new_clock_out', $attendanceRecord['clock_out']) }}">
                         </div>
                     </div>
 
@@ -61,10 +61,10 @@
                             <label class="form__header">{{ $index === 0 ? '休憩' : '休憩' . ($index + 1) }}</label>
                             <div class="form__input-group">
                                 <input class="form__input" type="text" name="new_break_in[{{ $index }}]"
-                                    value="{{ $break['break_in'] ?? '' }}">
+                                    value="{{ old('new_break_in.'.$index, $break['break_in'] ?? '') }}">
                                 <p>〜</p>
                                 <input class="form__input" type="text" name="new_break_out[{{ $index }}]"
-                                    value="{{ $break['break_out'] ?? '' }}">
+                                    value="{{ old('new_break_out.'.$index, $break['break_out'] ?? '') }}">
                             </div>
                         </div>
                         <div class="error-message">
@@ -80,9 +80,9 @@
                     <div class="form__group">
                         <label class="form__header">{{ $newBreakIndex === 0 ? '休憩' : '休憩' . ($newBreakIndex + 1) }}</label>
                         <div class="form__input-group">
-                            <input class="form__input" type="text" name="new_break_in[{{ $newBreakIndex }}]" value="">
+                            <input class="form__input" type="text" name="new_break_in[{{ $newBreakIndex }}]" value="{{ old('new_break_in.'.$newBreakIndex, '') }}">
                             <p>〜</p>
-                            <input class="form__input" type="text" name="new_break_out[{{ $newBreakIndex }}]" value="">
+                            <input class="form__input" type="text" name="new_break_out[{{ $newBreakIndex }}]" value="{{ old('new_break_out.'.$newBreakIndex, '') }}">
                         </div>
                     </div>
                     <div class="error-message">
@@ -96,7 +96,7 @@
                     <div class="form__group">
                         <label class="form__header" for="comment">備考</label>
                         <div class="form__input-group">
-                            <textarea class="form__textarea" name="comment" id="comment">{{ $attendanceRecord['comment'] }}</textarea>
+                            <textarea class="form__textarea" name="comment" id="comment">{{ old('comment', $attendanceRecord['comment']) }}</textarea>
                         </div>
                     </div>
                     <div class="error-message">
