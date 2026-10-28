@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Admin\AdminAttendanceController;
 use App\Http\Controllers\CorrectionRequestController;
+use App\Http\Controllers\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +31,9 @@ Route::middleware(['auth'])->group(function () {
 
     // PG04: 勤怠一覧画面
     Route::get('/attendance/list', [AttendanceController::class, 'list'])->name('attendance.list');
+
+    // PG14: マイ勤怠レポート
+    Route::get('/attendance/report', [ReportController::class, 'index'])->name('attendance.report');
 
     // PG05: 勤怠詳細画面・修正申請
     Route::get('/attendance/detail/{id}', [AttendanceController::class, 'detail'])->name('attendance.detail');

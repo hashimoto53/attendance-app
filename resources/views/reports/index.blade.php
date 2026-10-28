@@ -7,6 +7,11 @@
 @section('content')
 <div class="reports">
     <h1>マイ勤怠レポート</h1>
+    <div class="reports__menu">
+        <a href="{{ route('attendance.report', ['date' => $previousMonth]) }}">前月</a>
+        <p>{{ $date->format('Y/m') }}</p>
+        <a href="{{ route('attendance.report', ['date' => $nextMonth]) }}">翌月</a>
+    </div>
     <p>過去 6 ヶ月の勤怠データから集計しています。</p>
 
     {{-- 基本サマリー --}}
