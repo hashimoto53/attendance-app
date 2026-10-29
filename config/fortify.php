@@ -73,7 +73,29 @@ return [
     |
     */
 
-    'home' => '/home',
+    'home' => '/attendance',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fortify Route Paths
+    |--------------------------------------------------------------------------
+    */
+
+    'paths' => [
+        'verification' => [
+            'notice' => '/verify-email',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fortify Redirects
+    |--------------------------------------------------------------------------
+    */
+
+    'redirects' => [
+        'email-verification' => '/attendance',
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -146,7 +168,7 @@ return [
     'features' => [
         Features::registration(),
         Features::resetPasswords(),
-        // Features::emailVerification(),
+        Features::emailVerification(),
         Features::updateProfileInformation(),
         Features::updatePasswords(),
         Features::twoFactorAuthentication([

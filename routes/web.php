@@ -20,7 +20,7 @@ Route::get('/', function () {
 // ==========================================
 // 一般ユーザー用ルート（認証必須）
 // ==========================================
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
 
     // PG03: 勤怠登録画面（打刻画面）
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');

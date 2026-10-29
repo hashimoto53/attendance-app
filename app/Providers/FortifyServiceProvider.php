@@ -5,12 +5,15 @@ namespace App\Providers;
 use App\Actions\Fortify\CreateNewUser;
 use App\Http\Requests\LoginRequest;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\RegisterResponse;
+use Laravel\Fortify\Contracts\VerifyEmailResponse;
 use Laravel\Fortify\Fortify;
-use Laravel\Fortify\Contracts\LoginResponse; // ← 追加
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -54,7 +57,23 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($throttleKey);
         });
 
-        // ログイン後のリダイレクト先振り分け（追加箇所）
+        // 会員登録後はメール認証誘導画面へ
+        $this->app->instance(RegisterResponse::class, new class implements RegisterResponse {
+            public function toResponse($request)
+            {
+                return redirect()->route('verification.notice');
+            }
+        });
+
+        // 認証リンクの完了後は打刻画面へ
+        $this->app->instance(VerifyEmailResponse::class, new class implements VerifyEmailResponse {
+            public function toResponse($request)
+            {
+                return redirect()->intended('/attendance');
+            }
+        });
+
+        // ログイン後のリダイレクト先振り分け
         $this->app->instance(LoginResponse::class, new class implements LoginResponse {
             public function toResponse($request)
             {
@@ -65,7 +84,11 @@ class FortifyServiceProvider extends ServiceProvider
                     return redirect('/admin/attendance/list');
                 }
 
-                // 一般ユーザー（role = 1）は勤怠打刻画面へ
+                // 未認証の一般ユーザーはメール認証誘導画面へ
+                if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
+                    return redirect()->route('verification.notice');
+                }
+
                 return redirect('/attendance');
             }
         });
