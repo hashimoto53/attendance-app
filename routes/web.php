@@ -51,6 +51,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // PG13: 修正申請承認画面・承認処理
     Route::get('/stamp_correction_request/approve/{attendance_correct_request_id}', [CorrectionRequestController::class, 'showApproveForm'])->name('request.approve.form');
     Route::post('/stamp_correction_request/approve/{attendance_correct_request_id}', [CorrectionRequestController::class, 'approve'])->name('request.approve');
+
+    // FN045: スタッフ別勤怠の CSV 出力
+    Route::post('/export', [AdminAttendanceController::class, 'export'])->name('admin.attendance.export');
 });
 
 // ==========================================

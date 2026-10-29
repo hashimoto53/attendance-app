@@ -61,7 +61,7 @@
         @endforeach
     </table>
     <div class="csv-button">
-        <form action="/export" method="post">
+        <form action="{{ route('admin.attendance.export') }}" method="post">
         @csrf
             <input type="hidden" name="user_id" value="{{ $user->id }}">
             <input type="hidden" name="year_month" value="{{ $date->format('Y-m') }}">

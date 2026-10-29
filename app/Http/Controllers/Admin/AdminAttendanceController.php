@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminAttendanceController extends Controller
 {
@@ -126,6 +127,61 @@ class AdminAttendanceController extends Controller
         $user = User::query()->where('role', 1)->findOrFail($id);
         $date = $this->resolveMonth($request->query('date'));
 
+        $formattedAttendanceRecords = $this->monthlyAttendanceRows($user, $date);
+
+        return view('admin.staff-attendance-list', [
+            'user' => $user,
+            'date' => $date,
+            'previousMonth' => $date->copy()->subMonthNoOverflow()->format('Y-m'),
+            'nextMonth' => $date->copy()->addMonthNoOverflow()->format('Y-m'),
+            'formattedAttendanceRecords' => $formattedAttendanceRecords,
+        ]);
+    }
+
+    /**
+     * 指定スタッフ・指定月の勤怠を CSV でダウンロードする
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $user = User::query()
+            ->where('role', 1)
+            ->findOrFail($request->integer('user_id'));
+        $date = $this->resolveMonth($request->input('year_month'));
+        $rows = $this->monthlyAttendanceRows($user, $date)
+            ->filter(function (array $row): bool {
+                return ! empty($row['id']);
+            })
+            ->values();
+
+        $filename = sprintf('attendance_%d_%s.csv', $user->id, $date->format('Y-m'));
+
+        return response()->streamDownload(function () use ($rows): void {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, ['日付', '出勤', '退勤', '休憩', '合計', '備考']);
+
+            $rows->each(function (array $row) use ($handle): void {
+                fputcsv($handle, [
+                    $row['date'],
+                    $row['clock_in'],
+                    $row['clock_out'],
+                    $this->formatClock($row['total_break_time']),
+                    $this->formatClock($row['total_time']),
+                    $row['remarks'],
+                ]);
+            });
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    /**
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function monthlyAttendanceRows(User $user, Carbon $date): Collection
+    {
         $attendances = $user->attendances()
             ->with('rests')
             ->whereYear('date', $date->year)
@@ -136,7 +192,7 @@ class AdminAttendanceController extends Controller
                 return Carbon::parse($attendance->date)->toDateString();
             });
 
-        $formattedAttendanceRecords = collect(range(1, $date->daysInMonth))
+        return collect(range(1, $date->daysInMonth))
             ->map(function (int $day) use ($date, $attendances): array {
                 $current = $date->copy()->day($day);
 
@@ -145,14 +201,15 @@ class AdminAttendanceController extends Controller
                     $attendances->get($current->toDateString())
                 );
             });
+    }
 
-        return view('admin.staff-attendance-list', [
-            'user' => $user,
-            'date' => $date,
-            'previousMonth' => $date->copy()->subMonthNoOverflow()->format('Y-m'),
-            'nextMonth' => $date->copy()->addMonthNoOverflow()->format('Y-m'),
-            'formattedAttendanceRecords' => $formattedAttendanceRecords,
-        ]);
+    private function formatClock(?string $duration): string
+    {
+        if ($duration === null || $duration === '') {
+            return '';
+        }
+
+        return Carbon::parse($duration)->format('G:i');
     }
 
     private function findAttendance(int $id): Attendance
@@ -232,6 +289,7 @@ class AdminAttendanceController extends Controller
             'clock_out' => $attendance?->clock_out ? Carbon::parse($attendance->clock_out)->format('H:i') : '',
             'total_break_time' => $this->formatDuration($breakMinutes),
             'total_time' => $this->formatDuration($workMinutes),
+            'remarks' => $attendance?->remarks ?? '',
         ];
     }
 
