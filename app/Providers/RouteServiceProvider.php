@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Attendance;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
@@ -26,6 +27,11 @@ class RouteServiceProvider extends ServiceProvider
     {
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // 公開APIの {attendanceRecord} は attendances テーブルの Attendance を解決する
+        Route::bind('attendanceRecord', function (string $value) {
+            return Attendance::query()->findOrFail($value);
         });
 
         $this->routes(function () {

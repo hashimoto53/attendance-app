@@ -69,9 +69,25 @@ class Attendance extends Model
     }
 
     /**
+     * 公開APIの休憩。実体は rests
+     */
+    public function breaks()
+    {
+        return $this->hasMany(Rest::class);
+    }
+
+    /**
      * 勤怠記録は複数の修正申請を持つ
      */
     public function correctionRequests()
+    {
+        return $this->hasMany(CorrectionRequest::class, 'attendance_id', 'id');
+    }
+
+    /**
+     * 公開APIの修正申請。実体は correction_requests
+     */
+    public function applications()
     {
         return $this->hasMany(CorrectionRequest::class, 'attendance_id', 'id');
     }
