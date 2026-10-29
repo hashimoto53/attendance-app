@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -21,7 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-        'role', // ← 管理者・一般ユーザー判別用に追加
+        'role',
     ];
 
     /**
@@ -45,17 +46,17 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
-     * ユーザーは複数の勤怠記録を持つ
+     * ユーザーは複数の勤怠記録を持つ。
      */
-    public function attendances()
+    public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);
     }
 
     /**
-     * ユーザーは複数の修正申請を持つ
+     * ユーザーは複数の修正申請を持つ。
      */
-    public function correctionRequests()
+    public function correctionRequests(): HasMany
     {
         return $this->hasMany(CorrectionRequest::class, 'user_id', 'id');
     }

@@ -13,7 +13,6 @@
             @csrf
 
             @if (! $isPending)
-                {{-- 承認待ちが無い場合：修正フォーム --}}
                 <div class="form__content">
                     <div class="form__group">
                         <label class="form__header" for="name">名前</label>
@@ -26,7 +25,6 @@
                     <div class="form__group">
                         <label class="form__header">日付</label>
                         <div class="form__input-group">
-                            {{-- 日付は表示のみ（修正不可）。名前欄と同様に枠線（border）を外す --}}
                             <input class="form__input form__input--date" type="text" value="{{ $data['year'] }}" readonly>
                             <input class="form__input form__input--date" type="text" name="new_date" value="{{ $data['date'] }}" readonly>
                         </div>

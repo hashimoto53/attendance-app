@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 
 class CorrectionRequest extends Model
@@ -35,17 +36,17 @@ class CorrectionRequest extends Model
     ];
 
     /**
-     * 修正申請は1人のユーザーに属する
+     * 修正申請は1人のユーザーに属する。
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     /**
-     * 修正申請は1つの勤怠記録に属する
+     * 修正申請は1つの勤怠記録に属する。
      */
-    public function attendance()
+    public function attendance(): BelongsTo
     {
         return $this->belongsTo(Attendance::class, 'attendance_id', 'id');
     }

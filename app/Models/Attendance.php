@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Attendance extends Model
 {
@@ -53,41 +55,41 @@ class Attendance extends Model
     ];
 
     /**
-     * 勤怠記録は1人のユーザーに属する
+     * 勤怠記録は1人のユーザーに属する。
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     /**
-     * 勤怠記録は複数の休憩記録を持つ
+     * 勤怠記録は複数の休憩記録を持つ。
      */
-    public function rests()
+    public function rests(): HasMany
     {
         return $this->hasMany(Rest::class);
     }
 
     /**
-     * 公開APIの休憩。実体は rests
+     * 公開APIの休憩。実体は rests。
      */
-    public function breaks()
+    public function breaks(): HasMany
     {
         return $this->hasMany(Rest::class);
     }
 
     /**
-     * 勤怠記録は複数の修正申請を持つ
+     * 勤怠記録は複数の修正申請を持つ。
      */
-    public function correctionRequests()
+    public function correctionRequests(): HasMany
     {
         return $this->hasMany(CorrectionRequest::class, 'attendance_id', 'id');
     }
 
     /**
-     * 公開APIの修正申請。実体は correction_requests
+     * 公開APIの修正申請。実体は correction_requests。
      */
-    public function applications()
+    public function applications(): HasMany
     {
         return $this->hasMany(CorrectionRequest::class, 'attendance_id', 'id');
     }

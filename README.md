@@ -38,7 +38,27 @@ docker run --rm \
 
 - アプリ: http://localhost
 - phpMyAdmin: http://localhost:8080
-- Mailpit: http://localhost:8025
+- Mailpit（会員登録の認証メール）: http://localhost:8025
+
+新規会員登録後は認証メールの確認が必要です。未認証の一般ユーザーは `/verify-email` に誘導されます。シーダーのユーザーは認証済みです。
+
+## テスト
+
+Sail 起動後に実行します。PHPUnit は `testing` データベースを使います。Sail の MySQL を初めて起動したときに作成されます。
+
+```bash
+./vendor/bin/sail artisan test
+```
+
+## 公開API
+
+読み取りは認証不要、登録・更新・削除は Sanctum の Bearer トークンが必要です。
+
+- `GET /api/v1/attendance-records`
+- `GET /api/v1/attendance-records/{attendanceRecord}`
+- `POST /api/v1/attendance-records`
+- `PUT /api/v1/attendance-records/{attendanceRecord}`
+- `DELETE /api/v1/attendance-records/{attendanceRecord}`
 
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 

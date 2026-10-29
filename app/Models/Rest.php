@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Rest extends Model
 {
@@ -16,9 +17,9 @@ class Rest extends Model
     ];
 
     /**
-     * 休憩記録は1つの勤怠記録に属する
+     * 休憩記録は1つの勤怠記録に属する。
      */
-    public function attendance()
+    public function attendance(): BelongsTo
     {
         return $this->belongsTo(Attendance::class);
     }

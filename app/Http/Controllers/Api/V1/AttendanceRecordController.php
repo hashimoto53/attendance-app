@@ -8,6 +8,7 @@ use App\Http\Requests\Api\V1\StoreAttendanceRecordRequest;
 use App\Http\Requests\Api\V1\UpdateAttendanceRecordRequest;
 use App\Http\Resources\AttendanceRecordResource;
 use App\Models\Attendance;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
@@ -51,7 +52,7 @@ class AttendanceRecordController extends Controller
     /**
      * 勤怠を登録する
      */
-    public function store(StoreAttendanceRecordRequest $request): \Illuminate\Http\JsonResponse
+    public function store(StoreAttendanceRecordRequest $request): JsonResponse
     {
         $validated = $request->validated();
 
