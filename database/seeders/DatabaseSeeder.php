@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 2. user1 の過去勤怠データの生成（採点要件に合わせたダミーデータ）
-        $now = Carbon::now();
+        $now = Carbon::now('Asia/Tokyo');
 
         // 過去5ヶ月分の通常勤務データ生成
         for ($month = 5; $month >= 1; $month--) {

@@ -23,6 +23,9 @@
             <button class="attendance__button--submit--clock-out" type="submit" formaction="{{ route('attendance.clockOut') }}" @disabled(! $canClockOut)>退勤</button>
             <button class="attendance__button--submit--break-in" type="submit" formaction="{{ route('attendance.restStart') }}" @disabled(! $canRestStart)>休憩入</button>
             <button class="attendance__button--submit--break-out" type="submit" formaction="{{ route('attendance.restEnd') }}" @disabled(! $canRestEnd)>休憩戻</button>
+            @if ($status === \App\Models\Attendance::STATUS_CLOCKED_OUT)
+                <p class="attendance__message">お疲れ様でした。</p>
+            @endif
         </div>
     </form>
 </div>

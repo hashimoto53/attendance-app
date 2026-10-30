@@ -62,6 +62,7 @@ class AttendanceStampTest extends TestCase
         $this->actingAs($user)->post('/attendance/clock-out')->assertRedirect('/attendance');
         $clockedOut = $this->actingAs($user)->get('/attendance');
         $clockedOut->assertSee('退勤済');
+        $clockedOut->assertSee('お疲れ様でした。');
         $this->assertButtonDisabled($clockedOut->getContent(), 'clock-in');
     }
 
