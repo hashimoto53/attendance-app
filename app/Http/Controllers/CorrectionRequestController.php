@@ -89,6 +89,8 @@ class CorrectionRequestController extends Controller
                     'status' => Attendance::STATUS_CLOCKED_OUT,
                 ]);
 
+                $application->applyProposedBreaks();
+
                 $application->update([
                     'status' => CorrectionRequest::STATUS_APPROVED,
                 ]);
@@ -108,7 +110,7 @@ class CorrectionRequestController extends Controller
     private function findRequest(int $id): CorrectionRequest
     {
         return CorrectionRequest::query()
-            ->with(['user', 'attendance.rests'])
+            ->with(['user', 'attendance.rests', 'proposedRests'])
             ->findOrFail($id);
     }
 

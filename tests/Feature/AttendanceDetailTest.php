@@ -148,6 +148,63 @@ class AttendanceDetailTest extends TestCase
             ->assertSee('承認済み');
     }
 
+    public function test_break_correction_is_stored_shown_and_applied_on_approval(): void
+    {
+        $user = User::factory()->create();
+        $admin = User::factory()->create(['role' => 2]);
+        $attendance = $this->attendance($user);
+        $attendance->rests()->create([
+            'start_time' => '12:00:00',
+            'end_time' => '13:00:00',
+        ]);
+
+        $this->actingAs($user)->post('/attendance/detail/'.$attendance->id, [
+            'new_clock_in' => '10:00',
+            'new_clock_out' => '19:00',
+            'new_break_in' => ['12:30', '15:00', ''],
+            'new_break_out' => ['13:15', '15:20', ''],
+            'comment' => '休憩を修正',
+        ])->assertRedirect('/attendance/detail/'.$attendance->id);
+
+        $correctionRequest = $attendance->correctionRequests()->with('proposedRests')->first();
+        $this->assertCount(2, $correctionRequest->proposedRests);
+        $this->assertSame('12:30:00', Carbon::parse($correctionRequest->proposedRests[0]->start_time)->format('H:i:s'));
+        $this->assertSame('13:15:00', Carbon::parse($correctionRequest->proposedRests[0]->end_time)->format('H:i:s'));
+        $this->assertSame('15:00:00', Carbon::parse($correctionRequest->proposedRests[1]->start_time)->format('H:i:s'));
+        $this->assertSame('15:20:00', Carbon::parse($correctionRequest->proposedRests[1]->end_time)->format('H:i:s'));
+
+        $this->actingAs($user)
+            ->get('/attendance/detail/'.$attendance->id)
+            ->assertOk()
+            ->assertSee('承認待ちのため修正はできません。')
+            ->assertSee('12:30')
+            ->assertSee('13:15')
+            ->assertSee('15:00')
+            ->assertSee('15:20')
+            ->assertDontSee('value="12:00"', false);
+
+        $this->actingAs($admin)
+            ->get('/stamp_correction_request/approve/'.$correctionRequest->id)
+            ->assertOk()
+            ->assertSee('12:30')
+            ->assertSee('13:15')
+            ->assertSee('15:00')
+            ->assertSee('15:20')
+            ->assertDontSee('value="12:00"', false);
+
+        $this->actingAs($admin)
+            ->post('/stamp_correction_request/approve/'.$correctionRequest->id)
+            ->assertRedirect('/stamp_correction_request/approve/'.$correctionRequest->id);
+
+        $attendance->refresh();
+        $rests = $attendance->rests()->orderBy('id')->get();
+        $this->assertCount(2, $rests);
+        $this->assertSame('12:30:00', Carbon::parse($rests[0]->start_time)->format('H:i:s'));
+        $this->assertSame('13:15:00', Carbon::parse($rests[0]->end_time)->format('H:i:s'));
+        $this->assertSame('15:00:00', Carbon::parse($rests[1]->start_time)->format('H:i:s'));
+        $this->assertSame('15:20:00', Carbon::parse($rests[1]->end_time)->format('H:i:s'));
+    }
+
     private function attendance(User $user): Attendance
     {
         return Attendance::query()->create([

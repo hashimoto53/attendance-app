@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
 class CorrectionRequest extends Model
@@ -49,6 +50,56 @@ class CorrectionRequest extends Model
     public function attendance(): BelongsTo
     {
         return $this->belongsTo(Attendance::class, 'attendance_id', 'id');
+    }
+
+    /**
+     * 修正申請に含まれる休憩の変更案。
+     */
+    public function proposedRests(): HasMany
+    {
+        return $this->hasMany(CorrectionRequestRest::class)->orderBy('id');
+    }
+
+    /**
+     * フォームの new_break_in / new_break_out を申請の休憩として保存する。
+     * 両方空の行は休憩なしとして除く。
+     *
+     * @param  array<int|string, mixed>  $breakIns
+     * @param  array<int|string, mixed>  $breakOuts
+     */
+    public function storeProposedBreaks(array $breakIns, array $breakOuts): void
+    {
+        collect(array_unique(array_merge(array_keys($breakIns), array_keys($breakOuts))))
+            ->sortBy(fn (int|string $index): int => (int) $index)
+            ->each(function (int|string $index) use ($breakIns, $breakOuts): void {
+                $start = trim((string) ($breakIns[$index] ?? ''));
+                $end = trim((string) ($breakOuts[$index] ?? ''));
+
+                if ($start === '' && $end === '') {
+                    return;
+                }
+
+                $this->proposedRests()->create([
+                    'start_time' => Carbon::parse($start)->format('H:i:s'),
+                    'end_time' => Carbon::parse($end)->format('H:i:s'),
+                ]);
+            });
+    }
+
+    /**
+     * 承認時に、勤怠の休憩を申請内容で置き換える。
+     */
+    public function applyProposedBreaks(): void
+    {
+        $attendance = $this->attendance;
+        $attendance->rests()->delete();
+
+        $this->proposedRests->each(function (CorrectionRequestRest $rest) use ($attendance): void {
+            $attendance->rests()->create([
+                'start_time' => Carbon::parse($rest->start_time)->format('H:i:s'),
+                'end_time' => Carbon::parse($rest->end_time)->format('H:i:s'),
+            ]);
+        });
     }
 
     /**
@@ -100,15 +151,12 @@ class CorrectionRequest extends Model
     }
 
     /**
-     * 承認画面の休憩。勤怠に記録されている休憩を表示する
+     * 承認画面の休憩。申請に保存した変更案を表示する
      */
     public function getProposalBreaksAttribute(): Collection
     {
-        $rests = $this->attendance?->rests ?? collect();
-
-        return $rests
-            ->filter(fn (Rest $rest): bool => (bool) $rest->start_time)
-            ->map(function (Rest $rest): object {
+        return $this->proposedRests
+            ->map(function (CorrectionRequestRest $rest): object {
                 return (object) [
                     'break_in' => $rest->start_time,
                     'break_out' => $rest->end_time,

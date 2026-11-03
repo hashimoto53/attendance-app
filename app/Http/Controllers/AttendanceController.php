@@ -102,15 +102,25 @@ class AttendanceController extends Controller
             return redirect()->route('attendance.detail', $attendance->id);
         }
 
-        $attendance->correctionRequests()->create([
-            'user_id' => $this->user()->id,
-            'attendance_id' => $attendance->id,
-            'date' => Carbon::parse($attendance->date)->toDateString(),
-            'clock_in' => Carbon::parse($request->input('new_clock_in'))->format('H:i:s'),
-            'clock_out' => Carbon::parse($request->input('new_clock_out'))->format('H:i:s'),
-            'remarks' => $request->input('comment'),
-            'status' => CorrectionRequest::STATUS_PENDING,
-        ]);
+        DB::transaction(function () use ($attendance, $request): void {
+            $correctionRequest = $attendance->correctionRequests()->create([
+                'user_id' => $this->user()->id,
+                'attendance_id' => $attendance->id,
+                'date' => Carbon::parse($attendance->date)->toDateString(),
+                'clock_in' => Carbon::parse($request->input('new_clock_in'))->format('H:i:s'),
+                'clock_out' => Carbon::parse($request->input('new_clock_out'))->format('H:i:s'),
+                'remarks' => $request->input('comment'),
+                'status' => CorrectionRequest::STATUS_PENDING,
+            ]);
+
+            $breakIns = $request->input('new_break_in', []);
+            $breakOuts = $request->input('new_break_out', []);
+
+            $correctionRequest->storeProposedBreaks(
+                is_array($breakIns) ? $breakIns : [],
+                is_array($breakOuts) ? $breakOuts : []
+            );
+        });
 
         return redirect()->route('attendance.detail', $attendance->id);
     }
@@ -262,6 +272,7 @@ class AttendanceController extends Controller
     private function findPendingCorrection(int $attendanceId): ?CorrectionRequest
     {
         return CorrectionRequest::query()
+            ->with('proposedRests')
             ->where('attendance_id', $attendanceId)
             ->where('user_id', $this->user()->id)
             ->where('status', CorrectionRequest::STATUS_PENDING)
@@ -280,21 +291,30 @@ class AttendanceController extends Controller
 
         $isPending = $pending !== null && (int) $pending->attendance_id === (int) $attendance->id;
 
+        $breaks = $isPending
+            ? $pending->proposalBreaks->map(function (object $break): array {
+                return [
+                    'break_in' => $this->formatTime($break->break_in),
+                    'break_out' => $this->formatTime($break->break_out),
+                ];
+            })->all()
+            : $attendance->rests->map(function (Rest $rest): array {
+                return [
+                    'break_in' => $this->formatTime($rest->start_time),
+                    'break_out' => $this->formatTime($rest->end_time),
+                ];
+            })->all();
+
         return [
             'id' => $attendance->id,
             'application' => $isPending ? $pending : null,
             'is_pending' => $isPending,
             'year' => $date->format('Y年'),
             'date' => $date->format('n月j日'),
-            'clock_in' => $this->formatTime($attendance->clock_in),
-            'clock_out' => $this->formatTime($attendance->clock_out),
-            'breaks' => $attendance->rests->map(function (Rest $rest): array {
-                return [
-                    'break_in' => $this->formatTime($rest->start_time),
-                    'break_out' => $this->formatTime($rest->end_time),
-                ];
-            })->all(),
-            'comment' => $attendance->remarks ?? '',
+            'clock_in' => $isPending ? $pending->new_clock_in : $this->formatTime($attendance->clock_in),
+            'clock_out' => $isPending ? $pending->new_clock_out : $this->formatTime($attendance->clock_out),
+            'breaks' => $breaks,
+            'comment' => $isPending ? ($pending->remarks ?? '') : ($attendance->remarks ?? ''),
         ];
     }
 
