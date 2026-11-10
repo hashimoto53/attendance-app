@@ -22,7 +22,7 @@
                 @csrf
                 <nav class="inner__group">
                     <a class="inner__group--item" href="/admin/attendance/list">勤怠一覧</a>
-                    <a class="inner__group--item" href="/stamp_correction_request/list">申請一覧</a>
+                    <a class="inner__group--item" href="/stamp_correction_request/list">申請</a>
                     <button class="inner__group--item logout-button">
                         ログアウト
                     </button>
