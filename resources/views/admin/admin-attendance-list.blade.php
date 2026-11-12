@@ -11,7 +11,10 @@
     </div>
     <div class="content__menu">
         <a class="previous-day" href="?date={{ $previousDay }}">前日</a>
-        <p class="current-day">{{ $date->format('Y/m/d') }}</p>
+        <form class="current-day" action="{{ route('admin.attendance.list') }}" method="get">
+            <input type="date" name="date" value="{{ $currentDate }}" onchange="this.form.submit()">
+            <span>{{ $date->format('Y年n月j日') }}</span>
+        </form>
         <a class="next-day" href="?date={{ $nextDay }}">翌日</a>
     </div>
     <table class="table">

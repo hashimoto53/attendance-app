@@ -30,15 +30,15 @@
 .content__menu {
     align-items: center;
     display: flex;
-    height: 60px;
+    flex-wrap: nowrap;
     justify-content: space-between;
     margin-bottom: 40px;
+    min-height: 60px;
     padding: 10px;
 }
 
 .previous-month,
-.next-month,
-.current-month {
+.next-month {
     display: inline-block;
 }
 
@@ -59,16 +59,6 @@
     width: 20px;
 }
 
-.current-month::before {
-    background: url('/images/calender.png') no-repeat center;
-    background-size: contain;
-    content: '';
-    display: inline-block;
-    height: 20px;
-    margin-right: 5px;
-    vertical-align: middle;
-    width: 20px;
-}
 
 .next-month::after {
     background: url('/images/arrow.png') no-repeat center;
@@ -86,8 +76,37 @@
 }
 
 .current-month {
+    align-items: center;
+    display: flex;
+    flex-shrink: 0;
     font-weight: bold;
+    gap: 8px;
     line-height: 40px;
+    white-space: nowrap;
+}
+
+.current-month input[type="date"] {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    height: 24px;
+    margin: 0;
+    min-width: 24px;
+    padding: 0;
+    width: 24px;
+}
+
+.current-month input[type="date"]::-webkit-datetime-edit,
+.current-month input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    display: none;
+}
+
+.current-month input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+    width: 20px;
 }
 
 .table__header {

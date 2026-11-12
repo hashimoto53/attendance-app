@@ -44,7 +44,8 @@ class AttendanceController extends Controller
      */
     public function list(Request $request): View
     {
-        $date = $this->resolveMonth($request->query('date'));
+        $selectedDate = $this->resolveSelectedDate($request->query('date', $request->query('month')));
+        $date = $selectedDate->copy()->startOfMonth();
 
         $attendances = $this->user()
             ->attendances()
@@ -69,6 +70,8 @@ class AttendanceController extends Controller
 
         return view('user.user-attendance-list', [
             'date' => $date,
+            'selectedDate' => $selectedDate,
+            'currentDate' => $selectedDate->toDateString(),
             'previousMonth' => $date->copy()->subMonthNoOverflow()->format('Y-m'),
             'nextMonth' => $date->copy()->addMonthNoOverflow()->format('Y-m'),
             'formattedAttendanceRecords' => $formattedAttendanceRecords,
@@ -345,20 +348,24 @@ class AttendanceController extends Controller
     }
 
     /**
-     * 一覧に表示する月を決める。未指定・不正値は今月。
+     * 一覧ヘッダーの選択日。未指定・不正値は本日。年月だけならその月の1日。
      */
-    private function resolveMonth(mixed $value): Carbon
+    private function resolveSelectedDate(mixed $value): Carbon
     {
-        $currentMonth = $this->now()->startOfMonth();
+        $today = $this->now()->startOfDay();
 
         if (! is_string($value) || ! preg_match('/^\d{4}-\d{2}(-\d{2})?$/', $value)) {
-            return $currentMonth;
+            return $today;
         }
 
         try {
-            return Carbon::parse($value, 'Asia/Tokyo')->startOfMonth();
+            $parsed = Carbon::parse($value, 'Asia/Tokyo');
+
+            return preg_match('/^\d{4}-\d{2}$/', $value)
+                ? $parsed->startOfMonth()
+                : $parsed->startOfDay();
         } catch (\Exception $exception) {
-            return $currentMonth;
+            return $today;
         }
     }
 

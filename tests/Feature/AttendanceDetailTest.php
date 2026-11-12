@@ -27,7 +27,7 @@ class AttendanceDetailTest extends TestCase
         $this->actingAs($user)
             ->get('/attendance/list')
             ->assertOk()
-            ->assertSee($month->format('Y/m'))
+            ->assertSee(Carbon::now('Asia/Tokyo')->format('Y年n月j日'))
             ->assertSee('09:00')
             ->assertSee(route('attendance.detail', Attendance::query()->first()->id), false);
 
@@ -36,11 +36,18 @@ class AttendanceDetailTest extends TestCase
 
         $this->actingAs($user)
             ->get('/attendance/list?date='.$previous)
-            ->assertSee($month->copy()->subMonthNoOverflow()->format('Y/m'));
+            ->assertSee($month->copy()->subMonthNoOverflow()->format('Y年n月'));
 
         $this->actingAs($user)
             ->get('/attendance/list?date='.$next)
-            ->assertSee($month->copy()->addMonthNoOverflow()->format('Y/m'));
+            ->assertSee($month->copy()->addMonthNoOverflow()->format('Y年n月'));
+
+        $this->actingAs($user)
+            ->get('/attendance/list?date=2026-05-12')
+            ->assertOk()
+            ->assertSee('value="2026-05-12"', false)
+            ->assertSee('2026年5月12日')
+            ->assertSee('05/12');
     }
 
     public function test_detail_shows_the_owner_name_date_and_stamps(): void

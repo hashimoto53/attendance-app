@@ -42,6 +42,7 @@ class AdminAttendanceController extends Controller
 
         return view('admin.admin-attendance-list', [
             'date' => $date,
+            'currentDate' => $date->toDateString(),
             'previousDay' => $date->copy()->subDay()->toDateString(),
             'nextDay' => $date->copy()->addDay()->toDateString(),
             'users' => $users,
@@ -125,13 +126,16 @@ class AdminAttendanceController extends Controller
     public function staffAttendance(Request $request, int $id): View
     {
         $user = User::query()->where('role', 1)->findOrFail($id);
-        $date = $this->resolveMonth($request->query('date'));
+        $selectedDate = $this->resolveSelectedDate($request->query('date', $request->query('month')));
+        $date = $selectedDate->copy()->startOfMonth();
 
         $formattedAttendanceRecords = $this->monthlyAttendanceRows($user, $date);
 
         return view('admin.staff-attendance-list', [
             'user' => $user,
             'date' => $date,
+            'selectedDate' => $selectedDate,
+            'currentDate' => $selectedDate->toDateString(),
             'previousMonth' => $date->copy()->subMonthNoOverflow()->format('Y-m'),
             'nextMonth' => $date->copy()->addMonthNoOverflow()->format('Y-m'),
             'formattedAttendanceRecords' => $formattedAttendanceRecords,
@@ -254,6 +258,28 @@ class AdminAttendanceController extends Controller
         }
 
         return Carbon::parse($time)->format('H:i');
+    }
+
+    /**
+     * 一覧ヘッダーの選択日。未指定・不正値は本日。年月だけならその月の1日。
+     */
+    private function resolveSelectedDate(mixed $value): Carbon
+    {
+        $today = Carbon::now('Asia/Tokyo')->startOfDay();
+
+        if (! is_string($value) || ! preg_match('/^\d{4}-\d{2}(-\d{2})?$/', $value)) {
+            return $today;
+        }
+
+        try {
+            $parsed = Carbon::parse($value, 'Asia/Tokyo');
+
+            return preg_match('/^\d{4}-\d{2}$/', $value)
+                ? $parsed->startOfMonth()
+                : $parsed->startOfDay();
+        } catch (\Exception $exception) {
+            return $today;
+        }
     }
 
     /**

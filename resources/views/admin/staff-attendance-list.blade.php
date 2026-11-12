@@ -11,7 +11,10 @@
     </div>
     <div class="content__menu">
         <a class="previous-month" href="?date={{ $previousMonth }}">前月</a>
-        <p class="current-month">{{ $date->format('Y/m') }}</p>
+        <form class="current-month" action="{{ route('admin.staff.attendance', $user->id) }}" method="get">
+            <input type="date" name="date" value="{{ $currentDate }}" onchange="this.form.submit()">
+            <span>{{ $selectedDate->format('Y年n月j日') }}</span>
+        </form>
         <a class="next-month" href="?date={{ $nextMonth }}">翌月</a>
     </div>
     <table class="table">

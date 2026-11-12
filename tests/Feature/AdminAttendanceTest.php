@@ -28,7 +28,7 @@ class AdminAttendanceTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin/attendance/list')
             ->assertOk()
-            ->assertSee($today->format('Y/m/d'))
+            ->assertSee($today->format('Y年n月j日'))
             ->assertSee('一般花子')
             ->assertSee('09:15')
             ->assertSee('18:15');
@@ -38,11 +38,12 @@ class AdminAttendanceTest extends TestCase
 
         $this->actingAs($admin)
             ->get('/admin/attendance/list?date='.$previous)
-            ->assertSee($today->copy()->subDay()->format('Y/m/d'));
+            ->assertSee($today->copy()->subDay()->format('Y年n月j日'));
 
         $this->actingAs($admin)
             ->get('/admin/attendance/list?date='.$next)
-            ->assertSee($today->copy()->addDay()->format('Y/m/d'));
+            ->assertSee($today->copy()->addDay()->format('Y年n月j日'))
+            ->assertSee('value="'.$next.'"', false);
     }
 
     public function test_admin_can_open_detail_and_sees_validation_messages(): void
@@ -123,17 +124,23 @@ class AdminAttendanceTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin/attendance/staff/'.$staff->id)
             ->assertOk()
-            ->assertSee($month->format('Y/m'))
+            ->assertSee(Carbon::now('Asia/Tokyo')->format('Y年n月j日'))
             ->assertSee('08:30')
             ->assertSee(route('admin.attendance.detail', $attendance->id), false);
 
         $this->actingAs($admin)
             ->get('/admin/attendance/staff/'.$staff->id.'?date='.$previous)
-            ->assertSee($month->copy()->subMonthNoOverflow()->format('Y/m'));
+            ->assertSee($month->copy()->subMonthNoOverflow()->format('Y年n月'));
 
         $this->actingAs($admin)
             ->get('/admin/attendance/staff/'.$staff->id.'?date='.$next)
-            ->assertSee($month->copy()->addMonthNoOverflow()->format('Y/m'));
+            ->assertSee($month->copy()->addMonthNoOverflow()->format('Y年n月'));
+
+        $this->actingAs($admin)
+            ->get('/admin/attendance/staff/'.$staff->id.'?month='.$previous)
+            ->assertOk()
+            ->assertSee('value="'.$previous.'"', false)
+            ->assertSee($month->copy()->subMonthNoOverflow()->format('Y年n月'));
     }
 
     public function test_general_user_cannot_open_admin_pages(): void
