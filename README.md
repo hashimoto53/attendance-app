@@ -8,12 +8,11 @@ Laravel 10 と Laravel Sail（Docker）で動く勤怠管理アプリです。
 
 | 区分 | メールアドレス | パスワード |
 | --- | --- | --- |
-| 管理者 | user3@example.com | password |
-| 一般ユーザー | user1@example.com | password |
-| 一般ユーザー | user2@example.com | password |
+| 管理者 | admin@example.com | password |
+| 一般ユーザー | user1@example.com 〜 user6@example.com | password |
 
-- 管理者（user3）でログインすると、勤怠一覧（`/admin/attendance/list`）に遷移します。
-- 一般ユーザー（user1 / user2）でログインすると、勤怠打刻画面（`/attendance`）に遷移します。
+- 管理者（admin）でログインすると、勤怠一覧（`/admin/attendance/list`）に遷移します。
+- 一般ユーザー（user1 〜 user6）でログインすると、勤怠打刻画面（`/attendance`）に遷移します。
 
 ## 環境構築手順
 
