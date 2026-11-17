@@ -63,7 +63,10 @@ class AttendanceStampTest extends TestCase
         $clockedOut = $this->actingAs($user)->get('/attendance');
         $clockedOut->assertSee('退勤済');
         $clockedOut->assertSee('お疲れ様でした。');
-        $this->assertButtonDisabled($clockedOut->getContent(), 'clock-in');
+        $clockedOut->assertDontSee('>出勤</button>', false);
+        $clockedOut->assertDontSee('>退勤</button>', false);
+        $clockedOut->assertDontSee('>休憩入</button>', false);
+        $clockedOut->assertDontSee('>休憩戻</button>', false);
     }
 
     public function test_clock_in_and_clock_out_are_listed(): void
@@ -137,9 +140,4 @@ class AttendanceStampTest extends TestCase
         $this->assertStringNotContainsString('disabled', $matches[0]);
     }
 
-    private function assertButtonDisabled(string $html, string $action): void
-    {
-        $this->assertSame(1, preg_match('/class="attendance__button--submit--'.preg_quote($action, '/').'"[^>]*>/', $html, $matches));
-        $this->assertStringContainsString('disabled', $matches[0]);
-    }
 }

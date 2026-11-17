@@ -19,11 +19,14 @@
             <input class="current-time__item" type="text" id="currentTime" value="{{ $formattedTime }}" readonly>
         </div>
         <div class="attendance__button">
-            <button class="attendance__button--submit--clock-in" type="submit" formaction="{{ route('attendance.clockIn') }}" @disabled(! $canClockIn)>出勤</button>
-            <button class="attendance__button--submit--clock-out" type="submit" formaction="{{ route('attendance.clockOut') }}" @disabled(! $canClockOut)>退勤</button>
-            <button class="attendance__button--submit--break-in" type="submit" formaction="{{ route('attendance.restStart') }}" @disabled(! $canRestStart)>休憩入</button>
-            <button class="attendance__button--submit--break-out" type="submit" formaction="{{ route('attendance.restEnd') }}" @disabled(! $canRestEnd)>休憩戻</button>
-            @if ($status === \App\Models\Attendance::STATUS_CLOCKED_OUT)
+            @if ($status === \App\Models\Attendance::STATUS_OFF_DUTY)
+                <button class="attendance__button--submit--clock-in" type="submit" formaction="{{ route('attendance.clockIn') }}">出勤</button>
+            @elseif ($status === \App\Models\Attendance::STATUS_WORKING)
+                <button class="attendance__button--submit--clock-out" type="submit" formaction="{{ route('attendance.clockOut') }}">退勤</button>
+                <button class="attendance__button--submit--break-in" type="submit" formaction="{{ route('attendance.restStart') }}">休憩入</button>
+            @elseif ($status === \App\Models\Attendance::STATUS_ON_BREAK)
+                <button class="attendance__button--submit--break-out" type="submit" formaction="{{ route('attendance.restEnd') }}">休憩戻</button>
+            @elseif ($status === \App\Models\Attendance::STATUS_CLOCKED_OUT)
                 <p class="attendance__message">お疲れ様でした。</p>
             @endif
         </div>
