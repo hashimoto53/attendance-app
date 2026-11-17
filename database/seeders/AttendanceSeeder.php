@@ -24,7 +24,7 @@ class AttendanceSeeder extends Seeder
     }
 
     /**
-     * 過去5ヶ月は各月平日15日。当月は平日17日へ勤務パターンを順に割り当てる。
+     * 過去5ヶ月は各月平日15日。当月は1日から17日までの17日に勤務パターンを順に割り当てる。
      */
     private function seedUser1(User $user, Carbon $today): void
     {
@@ -53,15 +53,12 @@ class AttendanceSeeder extends Seeder
 
         $index = 0;
         $cursor = $today->copy()->startOfMonth();
-        $monthEnd = $today->copy()->endOfMonth()->startOfDay();
+        $currentMonthLimit = $today->copy()->startOfMonth()->day(17);
 
-        while ($cursor->lte($monthEnd) && $index < count($patterns)) {
-            if ($cursor->isWeekday()) {
-                [$clockIn, $clockOut, $remarks] = $patterns[$index];
-                $this->createAttendance($user, $cursor, $clockIn, $clockOut, $remarks);
-                $index++;
-            }
-
+        while ($cursor->lte($currentMonthLimit) && $index < count($patterns)) {
+            [$clockIn, $clockOut, $remarks] = $patterns[$index];
+            $this->createAttendance($user, $cursor, $clockIn, $clockOut, $remarks);
+            $index++;
             $cursor->addDay();
         }
     }
