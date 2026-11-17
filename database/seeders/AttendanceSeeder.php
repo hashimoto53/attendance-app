@@ -11,32 +11,21 @@ use Illuminate\Database\Seeder;
 class AttendanceSeeder extends Seeder
 {
     /**
-     * 一般ユーザーの平日勤怠と休憩を作る。
-     * user1 はレポート採点用のパターン、それ以外は過去5ヶ月の全平日。
+     * user1 は採点用パターン、user2 は平日の実運用に近い勤怠を作る。
      */
     public function run(): void
     {
         $today = Carbon::now('Asia/Tokyo')->startOfDay();
-        $users = User::query()->where('role', 1)->orderBy('id')->get();
+        $user1 = User::query()->where('email', 'user1@example.com')->firstOrFail();
+        $user2 = User::query()->where('email', 'user2@example.com')->firstOrFail();
 
-        $users->each(function (User $user) use ($today): void {
-            if ($user->email === 'user1@example.com') {
-                $this->seedUser1($user, $today);
-
-                return;
-            }
-
-            $this->seedWeekdays(
-                $user,
-                $today->copy()->subMonthsNoOverflow(5)->startOfMonth(),
-                $today,
-                '09:00:00',
-                '18:00:00',
-                '通常勤務'
-            );
-        });
+        $this->seedUser1($user1, $today);
+        $this->seedUser2($user2, $today);
     }
 
+    /**
+     * 過去5ヶ月は各月平日15日。当月は平日17日へ勤務パターンを順に割り当てる。
+     */
     private function seedUser1(User $user, Carbon $today): void
     {
         for ($monthsAgo = 5; $monthsAgo >= 1; $monthsAgo--) {
@@ -64,8 +53,9 @@ class AttendanceSeeder extends Seeder
 
         $index = 0;
         $cursor = $today->copy()->startOfMonth();
+        $monthEnd = $today->copy()->endOfMonth()->startOfDay();
 
-        while ($cursor->lte($today) && $index < count($patterns)) {
+        while ($cursor->lte($monthEnd) && $index < count($patterns)) {
             if ($cursor->isWeekday()) {
                 [$clockIn, $clockOut, $remarks] = $patterns[$index];
                 $this->createAttendance($user, $cursor, $clockIn, $clockOut, $remarks);
@@ -74,55 +64,44 @@ class AttendanceSeeder extends Seeder
 
             $cursor->addDay();
         }
-
-        $this->seedUser1LateOctober($user);
     }
 
     /**
-     * 2026年10月23日〜31日の平日。月15日までの作成では入らない日。
+     * 過去5ヶ月の初日から本日までの平日。出勤時刻を日によって少しずらす。
      */
-    private function seedUser1LateOctober(User $user): void
+    private function seedUser2(User $user, Carbon $today): void
     {
-        $dates = [
-            '2026-10-23',
-            '2026-10-26',
-            '2026-10-27',
-            '2026-10-28',
-            '2026-10-29',
-            '2026-10-30',
+        $shifts = [
+            ['09:00:00', '18:00:00', '12:00:00', '13:00:00', '通常勤務'],
+            ['08:50:00', '18:10:00', '12:00:00', '13:00:00', '通常勤務'],
+            ['09:10:00', '18:20:00', '12:15:00', '13:05:00', '通常勤務'],
+            ['09:00:00', '19:00:00', '12:00:00', '13:00:00', '残業'],
+            ['09:20:00', '18:00:00', '12:00:00', '12:45:00', '遅刻'],
         ];
 
-        foreach ($dates as $date) {
-            $day = Carbon::parse($date, 'Asia/Tokyo')->startOfDay();
+        $cursor = $today->copy()->subMonthsNoOverflow(5)->startOfMonth();
+        $index = 0;
 
-            $exists = Attendance::query()
-                ->where('user_id', $user->id)
-                ->whereDate('date', $day->toDateString())
-                ->exists();
-
-            if ($exists) {
-                continue;
-            }
-
-            $this->createAttendance($user, $day, '09:00:00', '18:00:00', '通常勤務');
-        }
-    }
-
-    private function seedWeekdays(User $user, Carbon $from, Carbon $to, string $clockIn, string $clockOut, string $remarks): void
-    {
-        $cursor = $from->copy()->startOfDay();
-
-        while ($cursor->lte($to)) {
+        while ($cursor->lte($today)) {
             if ($cursor->isWeekday()) {
-                $this->createAttendance($user, $cursor, $clockIn, $clockOut, $remarks);
+                [$clockIn, $clockOut, $breakIn, $breakOut, $remarks] = $shifts[$index % count($shifts)];
+                $this->createAttendance($user, $cursor, $clockIn, $clockOut, $remarks, $breakIn, $breakOut);
+                $index++;
             }
 
             $cursor->addDay();
         }
     }
 
-    private function createAttendance(User $user, Carbon $date, string $clockIn, string $clockOut, string $remarks): void
-    {
+    private function createAttendance(
+        User $user,
+        Carbon $date,
+        string $clockIn,
+        string $clockOut,
+        string $remarks,
+        string $breakIn = '12:00:00',
+        string $breakOut = '13:00:00'
+    ): void {
         $attendance = Attendance::create([
             'user_id' => $user->id,
             'date' => $date->toDateString(),
@@ -134,8 +113,8 @@ class AttendanceSeeder extends Seeder
 
         Rest::create([
             'attendance_id' => $attendance->id,
-            'start_time' => '12:00:00',
-            'end_time' => '13:00:00',
+            'start_time' => $breakIn,
+            'end_time' => $breakOut,
         ]);
     }
 }

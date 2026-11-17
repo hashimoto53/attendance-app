@@ -13,34 +13,24 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $names = ['太郎', '次郎', '三郎', '四郎', '五郎', '六郎'];
-
-        foreach ($names as $index => $name) {
-            $number = $index + 1;
-
-            $user = User::create([
-                'name' => 'テスト'.$name.'（一般）',
-                'email' => 'user'.$number.'@example.com',
-                'password' => Hash::make('password'),
-                'role' => 1,
-            ]);
-
-            $user->forceFill([
-                'email_verified_at' => now(),
-            ])->save();
-        }
-
-        $admin = User::create([
-            'name' => '管理者',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('password'),
-            'role' => 2,
-        ]);
-
-        $admin->forceFill([
-            'email_verified_at' => now(),
-        ])->save();
+        $this->createUser('テスト太郎（一般）', 'user1@example.com', 1);
+        $this->createUser('テスト次郎（一般）', 'user2@example.com', 1);
+        $this->createUser('管理者花子', 'user3@example.com', 2);
 
         $this->call(AttendanceSeeder::class);
+    }
+
+    private function createUser(string $name, string $email, int $role): void
+    {
+        $user = User::create([
+            'name' => $name,
+            'email' => $email,
+            'password' => Hash::make('password'),
+            'role' => $role,
+        ]);
+
+        $user->forceFill([
+            'email_verified_at' => now(),
+        ])->save();
     }
 }
