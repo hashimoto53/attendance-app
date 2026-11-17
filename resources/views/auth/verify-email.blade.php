@@ -14,7 +14,7 @@
 <body>
     <header class="header">
         <div class="header__inner">
-            <a class="header__logo" href="/">
+            <a class="header__logo" href="{{ Auth::check() && Auth::user()->role == 2 ? route('admin.attendance.list') : route('attendance.index') }}">
                 <img class="header__logo--img" src="{{ asset('images/logo.svg') }}" alt="logo">
             </a>
         </div>
