@@ -27,26 +27,30 @@ class ReportController extends Controller
     public function index(Request $request): View
     {
         $endMonth = $this->resolveMonth($request->query('date'));
+        $trendEndMonth = Carbon::now('Asia/Tokyo')->startOfMonth();
         /** @var User $user */
         $user = Auth::user();
 
         $daily = $this->dailyRecords($user, $endMonth);
-        $months = $this->monthKeys($endMonth);
-        $byMonth = $daily->groupBy('month');
+        $trendDaily = $trendEndMonth->equalTo($endMonth)
+            ? $daily
+            : $this->dailyRecords($user, $trendEndMonth);
+        $months = $this->monthKeys($trendEndMonth);
+        $byMonth = $trendDaily->groupBy('month');
 
         $monthlyTrend = $months->map(function (string $month) use ($byMonth): array {
             $rows = $byMonth->get($month, collect());
 
             return [
                 'month' => $month,
-                'work_minutes' => (int) $rows->sum('work_minutes'),
-                'overtime_minutes' => (int) $rows->sum('overtime_minutes'),
+                'work_minutes' => $rows->isEmpty() ? 0 : (int) $rows->sum('work_minutes'),
+                'overtime_minutes' => $rows->isEmpty() ? 0 : (int) $rows->sum('overtime_minutes'),
             ];
         })->values();
 
         $worked = $daily->where('has_work', true);
         $totalWork = (int) $worked->sum('work_minutes');
-        $currentMonth = $byMonth->get($endMonth->format('Y-m'), collect());
+        $currentMonth = $daily->where('month', $endMonth->format('Y-m'));
 
         return view('reports.index', [
             'date' => $endMonth,
@@ -88,12 +92,16 @@ class ReportController extends Controller
     }
 
     /**
+     * 指定月を終端とする、当月を含む直近6ヶ月（古い月から順）。
+     *
      * @return Collection<int, string>
      */
     private function monthKeys(Carbon $endMonth): Collection
     {
-        return collect(range(0, 5))->map(function (int $offset) use ($endMonth): string {
-            return $endMonth->copy()->subMonthsNoOverflow(5 - $offset)->format('Y-m');
+        $end = $endMonth->copy()->startOfMonth();
+
+        return collect(range(5, 0))->map(function (int $monthsAgo) use ($end): string {
+            return $end->copy()->subMonthsNoOverflow($monthsAgo)->format('Y-m');
         });
     }
 

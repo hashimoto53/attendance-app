@@ -24,7 +24,8 @@ class AttendanceSeeder extends Seeder
     }
 
     /**
-     * 過去5ヶ月は各月平日15日。当月は1日から17日までの17日に勤務パターンを順に割り当てる。
+     * 過去5ヶ月は各月平日15日。
+     * 2026年11月は1日から20日までのうち、日曜日3日を除いた17日に勤務パターンを順に割り当てる。
      */
     private function seedUser1(User $user, Carbon $today): void
     {
@@ -51,11 +52,23 @@ class AttendanceSeeder extends Seeder
             [['08:00:00', '21:00:00', '長時間労働']]
         );
 
+        $skippedDates = [
+            '2026-11-01',
+            '2026-11-08',
+            '2026-11-15',
+        ];
+
         $index = 0;
-        $cursor = $today->copy()->startOfMonth();
-        $currentMonthLimit = $today->copy()->startOfMonth()->day(17);
+        $cursor = Carbon::parse('2026-11-01', 'Asia/Tokyo')->startOfDay();
+        $currentMonthLimit = Carbon::parse('2026-11-20', 'Asia/Tokyo')->startOfDay();
 
         while ($cursor->lte($currentMonthLimit) && $index < count($patterns)) {
+            if (in_array($cursor->toDateString(), $skippedDates, true)) {
+                $cursor->addDay();
+
+                continue;
+            }
+
             [$clockIn, $clockOut, $remarks] = $patterns[$index];
             $this->createAttendance($user, $cursor, $clockIn, $clockOut, $remarks);
             $index++;
